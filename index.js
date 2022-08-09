@@ -114,18 +114,30 @@ class Projectile {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.width = 10;
-        this.height = 10;
-        this.power = 20;
-        this.speed = 1;
+        this.width = 20;
+        this.height = 20;
+        this.power = 10;
+        this.speed = 1.5;
         this.image = new Image();
-        this.image.src = './assets/cannonPlant.png';
+        this.image.src = './assets/w_p.png';
+        this.projectilesFrame = 0;
+        this.timer = 0;
+
     }
     update() {
         this.x += this.speed;
+        if (this.timer % 10 === 0) {
+            if (this.projectilesFrame <= 26 * 2) {
+                this.projectilesFrame += 26
+            }
+            else {
+                this.projectilesFrame = 0
+            }
+        }
+        this.timer++
     }
     draw() {
-        ctx.drawImage(this.image, 77, 44, 10, 10, this.x, this.y, this.width, this.height)
+        ctx.drawImage(this.image, this.projectilesFrame, 0, 26, 26, this.x, this.y, this.width, this.height)
     }
 }
 const handleProjectiles = () => {
@@ -146,8 +158,8 @@ const redArcherImage = new Image();
 const witchImage = new Image();
 
 greenArcherImage.src = './assets/d1.png'
-redArcherImage.src = './assets/d2.png'
-witchImage.src = './assets/d3.png'
+redArcherImage.src = './assets/d3_.png'
+witchImage.src = './assets/d3_.png'
 
 const greenArcher = {
         image: greenArcherImage,
@@ -156,10 +168,10 @@ const greenArcher = {
         width: 0,
         idle: {
             startingFrame: 0,
-            endingFrame: 0
+            endingFrame: 6
         },
         shooting: {
-            startingFrame: 0,
+            startingFrame: 8,
             endingFrame: 0
         },
         getHit: {
@@ -188,15 +200,21 @@ const redArcher = {
 const witch = {
         image: witchImage,
         health: 100,
-        height: 0,
-        width: 0,
         idle: {
+            x:231,
+            y:0,
             startingFrame: 0,
-            endingFrame: 0
+            endingFrame: 6,
+            width: 220,
+            height: 90,
         },
         shooting: {
+            x:231,
+            y:1,
             startingFrame: 0,
-            endingFrame: 0
+            endingFrame: 6,
+            width: 220,
+            height: 90,
         },
         getHit: {
             startingFrame: 0,
@@ -212,16 +230,19 @@ class Defender {
         this.width = cellSize - cellGap;
         this.height = cellSize - cellGap;
         this.shotting = false;
-        this.health = greenArcher.health;
+        this.health = witch.health;
         this.maxHealth = this.health;
         this.projectiles = [];
         this.timer = 0;
-        this.image = redArcher.image;
-        this.defenderFrame = redArcher.idle.startingFrames;
+        this.image = witch.image;
+        this.defenderFrame = witch.shooting.x;
     }
     draw() {
-        ctx.drawImage(this.image,this.defenderFrame,64,64,64, this.x,this.y,cellSize,cellSize)
-        ctx.strokeStyle = 'white';
+        console.log(this.defenderFrame);
+        // drawImage(image, 0, 0, 90, 150, dx, dy, dWidth, dHeight) 
+        ctx.drawImage(this.image, this.defenderFrame, witch.shooting.y * witch.shooting.height, witch.shooting.width, witch.shooting.height, this.x, this.y, cellSize+witch.shooting.height, cellSize)
+        // ctx.drawImage(this.image,this.x, this.y, cellSize, cellSize)
+        ctx.strokeStyle = 'white'; 
         ctx.fillStyle = 'green';
         ctx.fillRect(this.x, this.y + cellSize - 5, (cellSize * this.health) / this.maxHealth, 2)
         ctx.lineWidth = .1;
@@ -229,16 +250,21 @@ class Defender {
     }
     update() {
         if (this.timer % 10 === 0) {
-            if (this.defenderFrame < 64 * 2) {
-                this.defenderFrame += 64
+            if (this.defenderFrame <= witch.shooting.x * witch.shooting.endingFrame) {
+                this.defenderFrame += witch.shooting.x
+                this.shotting = false
+                if (this.defenderFrame/witch.shooting.x === witch.shooting.endingFrame-2) {
+                    this.shotting=true
+                }
             }
             else {
                 this.defenderFrame = 0
+                this.shotting=false
             }
         }
         this.timer++
-        if (this.timer % 200 === 0) {
-            projectiles.push(new Projectile((this.x + cellSize), this.y + 4))
+        if (this.timer % 10 === 0 && this.shotting) {
+            projectiles.push(new Projectile((this.x + cellSize), this.y + 7))
         }
     }
 }
