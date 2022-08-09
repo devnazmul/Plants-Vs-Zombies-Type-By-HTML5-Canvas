@@ -220,7 +220,7 @@ class Defender {
         this.defenderFrame = redArcher.idle.startingFrames;
     }
     draw() {
-        ctx.drawImage(this.image, this.defenderFrame, 56, 65, 64, this.x, this.y, cellSize, cellSize)
+        ctx.drawImage(this.image,this.defenderFrame,64,64,64, this.x,this.y,cellSize,cellSize)
         ctx.strokeStyle = 'white';
         ctx.fillStyle = 'green';
         ctx.fillRect(this.x, this.y + cellSize - 5, (cellSize * this.health) / this.maxHealth, 2)
@@ -228,18 +228,18 @@ class Defender {
         ctx.strokeRect(this.x, this.y + cellSize - 5, cellSize, 2)
     }
     update() {
-        // if (this.timer % 100 === 0) {
-        //     if (this.defenderFrame < 25 * 2) {
-        //         this.defenderFrame += 25
-        //     }
-        //     else {
-        //         this.defenderFrame = 0
-        //     }
-        // }
-        // this.timer++
-        // if (this.timer % 200 === 0) {
-        //     projectiles.push(new Projectile((this.x + cellSize), this.y + 4))
-        // }
+        if (this.timer % 10 === 0) {
+            if (this.defenderFrame < 64 * 2) {
+                this.defenderFrame += 64
+            }
+            else {
+                this.defenderFrame = 0
+            }
+        }
+        this.timer++
+        if (this.timer % 200 === 0) {
+            projectiles.push(new Projectile((this.x + cellSize), this.y + 4))
+        }
     }
 }
 canvas.addEventListener('click', (e) => {
