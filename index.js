@@ -11,7 +11,7 @@ const cellGap = 5;
 const gameGrid = [];
 
 const defenders = [];
-let defenderFrame = 0;
+let defenderShootingX = 0;
 const projectiles = [];
 
 const enemies = [];
@@ -111,15 +111,14 @@ const handleGrid = () => {
 
 // PROJECTILES 
 class Projectile {
-    constructor(x, y) {
+    constructor(x, y, defenderProjectile) {
         this.x = x;
         this.y = y;
-        this.width = 20;
-        this.height = 20;
-        this.power = 10;
-        this.speed = 1.5;
-        this.image = new Image();
-        this.image.src = './assets/w_p.png';
+        this.width = defenderProjectile.width;
+        this.height = defenderProjectile.height;
+        this.power = defenderProjectile.power;
+        this.speed = defenderProjectile.speed;
+        this.image = defenderProjectile.image;
         this.projectilesFrame = 0;
         this.timer = 0;
 
@@ -156,10 +155,13 @@ const handleProjectiles = () => {
 const greenArcherImage = new Image();
 const redArcherImage = new Image();
 const witchImage = new Image();
+const witchProjectile = new Image();
+
 
 greenArcherImage.src = './assets/d1.png'
 redArcherImage.src = './assets/d3_.png'
 witchImage.src = './assets/d3_.png'
+witchProjectile.src = './assets/w_p.png';
 
 const greenArcher = {
         image: greenArcherImage,
@@ -200,6 +202,13 @@ const redArcher = {
 const witch = {
         image: witchImage,
         health: 100,
+        projectile:{
+            width : 15,
+            height : 15,
+            power : 10,
+            speed :1.5,
+            image : witchProjectile,
+        },
         idle: {
             x:231,
             y:0,
@@ -224,24 +233,38 @@ const witch = {
 
 
 class Defender {
-    constructor(x, y) {
+    constructor(x, y, defender) {
         this.x = x;
         this.y = y;
         this.width = cellSize - cellGap;
         this.height = cellSize - cellGap;
         this.shotting = false;
-        this.health = witch.health;
-        this.maxHealth = this.health;
         this.projectiles = [];
         this.timer = 0;
-        this.image = witch.image;
-        this.defenderFrame = witch.shooting.x;
+        
+        this.health = defender.health;
+        this.maxHealth = this.health;
+        this.image = defender.image;
+
+        // THIS IS CONSTANT 
+        this.defenderShootingX = defender.shooting.x;
+
+        this.defenderShootingFrameX = this.defenderShootingX;
+        this.defenderShootingY = defender.shooting.y;
+        this.defenderShootingFrameWidth = defender.shooting.width
+        this.defenderShootingFrameHeight = defender.shooting.height
+        this.defenderShootingStartingFrame = defender.shooting.height
+        this.defenderShootingEndingFrame = defender.shooting.endingFrame
+
+        this.defenderProjectile = defender.projectile
+        
     }
     draw() {
-        console.log(this.defenderFrame);
-        // drawImage(image, 0, 0, 90, 150, dx, dy, dWidth, dHeight) 
-        ctx.drawImage(this.image, this.defenderFrame, witch.shooting.y * witch.shooting.height, witch.shooting.width, witch.shooting.height, this.x, this.y, cellSize+witch.shooting.height, cellSize)
-        // ctx.drawImage(this.image,this.x, this.y, cellSize, cellSize)
+        
+        // DRAW DEFENDER 
+        ctx.drawImage(this.image, this.defenderShootingX, this.defenderShootingY * this.defenderShootingFrameHeight, this.defenderShootingFrameWidth, this.defenderShootingFrameHeight, this.x, this.y, cellSize + this.defenderShootingFrameHeight, cellSize)
+
+        // DAW HEALTH BAR 
         ctx.strokeStyle = 'white'; 
         ctx.fillStyle = 'green';
         ctx.fillRect(this.x, this.y + cellSize - 5, (cellSize * this.health) / this.maxHealth, 2)
@@ -250,21 +273,21 @@ class Defender {
     }
     update() {
         if (this.timer % 10 === 0) {
-            if (this.defenderFrame <= witch.shooting.x * witch.shooting.endingFrame) {
-                this.defenderFrame += witch.shooting.x
+            if (this.defenderShootingX <= this.defenderShootingFrameX * this.defenderShootingEndingFrame) {
+                this.defenderShootingX += this.defenderShootingFrameX
                 this.shotting = false
-                if (this.defenderFrame/witch.shooting.x === witch.shooting.endingFrame-2) {
+                if (this.defenderShootingX / this.defenderShootingFrameX === this.defenderShootingEndingFrame-2) {
                     this.shotting=true
                 }
             }
             else {
-                this.defenderFrame = 0
+                this.defenderShootingX = 0
                 this.shotting=false
             }
         }
         this.timer++
         if (this.timer % 10 === 0 && this.shotting) {
-            projectiles.push(new Projectile((this.x + cellSize), this.y + 7))
+            projectiles.push(new Projectile((this.x + cellSize), this.y + 10, this.defenderProjectile ))
         }
     }
 }
@@ -278,7 +301,7 @@ canvas.addEventListener('click', (e) => {
     }
     let defenderCost = 100;
     if (defenderCost <= numberOfResources) {
-        defenders.push(new Defender(gridPositionX, gridPositionY));
+        defenders.push(new Defender(gridPositionX, gridPositionY,witch));
         numberOfResources -= defenderCost;
     }
 })
@@ -344,7 +367,7 @@ class Enemy {
         }
         this.image = new Image();
         this.image.src = './assets/spritesheet.png';
-        this.defenderFrame = defenderFrame
+        this.defenderShootingX = defenderShootingX
         this.timer = 0
 
     }
@@ -352,18 +375,18 @@ class Enemy {
         this.x -= this.movement;
         if (this.timer % 10 === 0) {
             if (this.character == 'bear' || this.character == 'wolf') {
-                if (this.defenderFrame < 16 * 3) {
-                    this.defenderFrame += 16
+                if (this.defenderShootingX < 16 * 3) {
+                    this.defenderShootingX += 16
                 }
                 else {
-                    this.defenderFrame = 0
+                    this.defenderShootingX = 0
                 }
             } else {
-                if (this.defenderFrame < 16 * 7) {
-                    this.defenderFrame += 16
+                if (this.defenderShootingX < 16 * 7) {
+                    this.defenderShootingX += 16
                 }
                 else {
-                    this.defenderFrame = 0
+                    this.defenderShootingX = 0
                 }
             }
         }
@@ -371,18 +394,18 @@ class Enemy {
     }
     draw() {
         if (this.character == 'greenSnake') {
-            ctx.drawImage(this.image, this.defenderFrame, 0, 16, 16, this.x, this.y, cellSize, cellSize)
+            ctx.drawImage(this.image, this.defenderShootingX, 0, 16, 16, this.x, this.y, cellSize, cellSize)
 
         }
         if (this.character == 'graySnake') {
-            ctx.drawImage(this.image, this.defenderFrame, 16 * 3, 16, 16, this.x, this.y, cellSize, cellSize)
+            ctx.drawImage(this.image, this.defenderShootingX, 16 * 3, 16, 16, this.x, this.y, cellSize, cellSize)
 
         }
         if (this.character == 'bear') {
-            ctx.drawImage(this.image, this.defenderFrame + (16 * 4), 16 * 18, 16, 16, this.x, this.y, cellSize, cellSize)
+            ctx.drawImage(this.image, this.defenderShootingX + (16 * 4), 16 * 18, 16, 16, this.x, this.y, cellSize, cellSize)
         }
         if (this.character == 'wolf') {
-            ctx.drawImage(this.image, this.defenderFrame + (16 * 4), 16 * 24, 16, 16, this.x, this.y, cellSize, cellSize)
+            ctx.drawImage(this.image, this.defenderShootingX + (16 * 4), 16 * 24, 16, 16, this.x, this.y, cellSize, cellSize)
         }
         ctx.strokeStyle = 'white';
         ctx.fillStyle = 'red';
@@ -460,9 +483,12 @@ const animate = () => {
             ctx.font = '50px Creepster';
             ctx.fillText(`Win with ${points} points`, canvas.width / 2 - 150, canvas.height / 2 + 30)
         } else {
+
             ctx.fillStyle = 'white';
             ctx.font = '50px Creepster';
-            ctx.fillText(`Game Over`, canvas.width / 2 - 100, canvas.height / 2 + 20)
+            ctx.fillText(`Game Over`, canvas.width / 2 - 100, canvas.height / 2 )
+            // ctx.fillStyle = 'white'
+            // ctx.fillRect(canvas.width/2 - (cellSize+100)/2, canvas.height/2 + cellSize, cellSize+100,cellSize)
         }
 
     }
